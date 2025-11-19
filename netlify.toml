@@ -1,0 +1,38 @@
+# Netlify Configuration for GlacierFarm
+
+[build]
+  command = "npm run build"
+  functions = "netlify/functions"
+  publish = "client/dist"
+
+# API function routing
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api:splat"
+  status = 200
+
+# Health check
+[[redirects]]
+  from = "/health"
+  to = "/.netlify/functions/hello"
+  status = 200
+
+# SPA routing - redirect all routes to index.html (except /api and /health)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  conditions = { NOT = [{ path = "/api/*" }, { path = "/health" }] }
+
+# Environment variables for deployment
+[context.production.environment]
+  FRONTEND_URL = "https://glacierfarm.netlify.app"
+  NODE_ENV = "production"
+
+[context.deploy-preview.environment]
+  FRONTEND_URL = "https://deploy-preview--glacierfarm.netlify.app"
+  NODE_ENV = "staging"
+
+[context.branch-deploy.environment]
+  FRONTEND_URL = "http://localhost:3000"
+  NODE_ENV = "development"

@@ -1,78 +1,76 @@
-import { useState } from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { AuthProvider } from './context/AuthContext'
-import { ProtectedRoute } from './context/ProtectedRoute'
-import Navbar from './components/Navbar'
-import HomePage from './pages/HomePage'
-import ProductsPage from './pages/ProductsPage'
-import OrdersPage from './pages/OrdersPage'
-import StorageUnitsPage from './pages/StorageUnitsPage'
-import LoginPage from './pages/LoginPage'
-import SignupPage from './pages/SignupPage'
-import DashboardPage from './pages/DashboardPage'
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './context/ProtectedRoute';
+import DashboardLayout from './components/DashboardLayout';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import DashboardPage from './pages/DashboardPage';
+import ProductsPage from './pages/ProductsPage';
+import OrdersPage from './pages/OrdersPage';
+import StorageUnitsPage from './pages/StorageUnitsPage';
+import ProfilePage from './pages/ProfilePage';
+import MarketplacePage from './pages/MarketplacePage';
 
-function App() {
+import HomePage from './pages/HomePage';
+
+const App = () => {
   return (
-    <Router>
-      <AuthProvider>
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-          <Routes>
-            {/* Auth Routes */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
+    <AuthProvider>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        
+        {/* Protected Routes */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <DashboardPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/marketplace" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <MarketplacePage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/products" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <ProductsPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/orders" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <OrdersPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/storage-units" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <StorageUnitsPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <ProfilePage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
 
-            {/* Protected Dashboard Route */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute pageName="Dashboard">
-                  <Navbar />
-                  <DashboardPage />
-                </ProtectedRoute>
-              }
-            />
+        {/* Catch all - redirect to dashboard */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AuthProvider>
+  );
+};
 
-            {/* Public Routes */}
-            <Route
-              path="/*"
-              element={
-                <>
-                  <Navbar />
-                  <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route
-                      path="/products"
-                      element={
-                        <ProtectedRoute pageName="Products & Inventory">
-                          <ProductsPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/orders"
-                      element={
-                        <ProtectedRoute pageName="Orders Management">
-                          <OrdersPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/storage-units"
-                      element={
-                        <ProtectedRoute pageName="Storage Units">
-                          <StorageUnitsPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                  </Routes>
-                </>
-              }
-            />
-          </Routes>
-        </div>
-      </AuthProvider>
-    </Router>
-  )
-}
-
-export default App
+export default App;

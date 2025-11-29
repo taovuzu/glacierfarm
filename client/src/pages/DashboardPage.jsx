@@ -1,224 +1,191 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { apiCall } from '../utils/api';
+import { motion } from 'framer-motion';
+import {
+  TrendingUp,
+  Users,
+  ShoppingBag,
+  Activity,
+  ArrowUpRight,
+  ArrowDownRight,
+  DollarSign,
+  Package,
+  Clock,
+  ChevronRight
+} from 'lucide-react';
 
-export default function DashboardPage() {
-  const navigate = useNavigate()
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+const DashboardPage = () => {
   const [stats, setStats] = useState({
-    productsStored: 0,
-    activeOrders: 0,
     storageUnits: 0,
+    pendingOrders: 0,
     totalRevenue: 0
-  })
+  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const userData = localStorage.getItem('user')
-    if (!userData) {
-      navigate('/login')
-      return
+    const fetchData = async () => {
+      try {
+        const [ordersData, unitsData] = await Promise.all([
+          apiCall('/orders'),
+          apiCall('/storage-units')
+        ]);
+
+        const pendingOrders = ordersData.orders.filter(o => o.status === 'pending').length;
+        const totalRevenue = ordersData.orders.reduce((acc, curr) => acc + curr.totalPrice, 0);
+        const activeUnits = unitsData.storageUnits.length;
+
+        setStats({
+          storageUnits: activeUnits,
+          pendingOrders,
+          totalRevenue
+        });
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
     }
-    setUser(JSON.parse(userData))
-    setLoading(false)
+  };
 
-    // Simulate fetching dashboard data
-    setStats({
-      productsStored: 12450,
-      activeOrders: 8,
-      storageUnits: 3,
-      totalRevenue: 125000
-    })
-  }, [navigate])
-
-  const handleLogout = () => {
-    localStorage.removeItem('user')
-    localStorage.removeItem('token')
-    navigate('/login')
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mb-4"></div>
-          <p className="text-gray-300">Loading dashboard...</p>
-        </div>
-      </div>
-    )
-  }
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Top Bar */}
-      <div className="bg-gradient-to-r from-blue-900 to-blue-800 border-b border-blue-700 sticky top-16 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-white">{user?.farmName}</h1>
-              <p className="text-blue-200 text-sm">{user?.location || 'Farm Location'}</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right hidden sm:block">
-                <p className="text-white font-semibold">{user?.email}</p>
-                <p className="text-blue-200 text-sm">{user?.phoneNumber || 'Phone'}</p>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mb-8">
+        <h1 className="heading-xl">Dashboard Overview</h1>
+        <p className="text-slate-500 mt-1">Welcome back! Here's what's happening with your farm today.</p>
+      </div>
+
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+      >
+        <DashboardCard
+          title="Active Storage Units"
+          value={loading ? "..." : stats.storageUnits}
+          icon={<Package className="text-white w-6 h-6" />}
+          trend="+2.5%"
+          trendUp={true}
+          color="bg-gradient-to-br from-emerald-400 to-emerald-600"
+          variants={itemVariants}
+        />
+        <DashboardCard
+          title="Pending Orders"
+          value={loading ? "..." : stats.pendingOrders}
+          icon={<Clock className="text-white w-6 h-6" />}
+          trend="-4.1%"
+          trendUp={false}
+          color="bg-gradient-to-br from-amber-400 to-orange-500"
+          variants={itemVariants}
+        />
+        <DashboardCard
+          title="Total Volume"
+          value={loading ? "..." : `₹${stats.totalRevenue.toLocaleString()}`}
+          icon={<TrendingUp className="text-white w-6 h-6" />}
+          trend="+12.3%"
+          trendUp={true}
+          color="bg-gradient-to-br from-blue-400 to-indigo-600"
+          variants={itemVariants}
+        />
+      </motion.div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <motion.div
+          variants={itemVariants}
+          initial="hidden"
+          animate="visible"
+          className="card"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-slate-900">Recent Activity</h3>
+            <button className="text-emerald-600 text-sm font-medium hover:underline">View All</button>
+          </div>
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                  <Activity className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-slate-900">System initialized</p>
+                  <p className="text-xs text-slate-500">2 hours ago</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
               </div>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition"
-              >
-                Logout
-              </button>
-            </div>
+            ))}
           </div>
-        </div>
-      </div>
+        </motion.div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Welcome Message */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-white mb-2">
-            Welcome back, {user?.farmName?.split(' ')[0]}! 👋
-          </h2>
-          <p className="text-gray-400">Here's what's happening with your cold storage today</p>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            icon="📦"
-            title="Products Stored"
-            value={stats.productsStored}
-            unit="kg"
-            color="from-green-900 to-green-800"
-          />
-          <StatCard
-            icon="🚚"
-            title="Active Orders"
-            value={stats.activeOrders}
-            unit="orders"
-            color="from-blue-900 to-blue-800"
-          />
-          <StatCard
-            icon="❄️"
-            title="Storage Units"
-            value={stats.storageUnits}
-            unit="units"
-            color="from-cyan-900 to-cyan-800"
-          />
-          <StatCard
-            icon="💰"
-            title="Total Revenue"
-            value={`₹${(stats.totalRevenue / 1000).toFixed(0)}k`}
-            unit="this month"
-            color="from-yellow-900 to-yellow-800"
-          />
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-6 border border-gray-700">
-            <h3 className="text-xl font-bold text-white mb-4">Quick Actions</h3>
-            <div className="space-y-3">
-              <Link
-                to="/products"
-                className="block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition text-center"
-              >
-                Add New Product
-              </Link>
-              <Link
-                to="/orders"
-                className="block px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition text-center"
-              >
-                Create Order
-              </Link>
-              <Link
-                to="/storage-units"
-                className="block px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition text-center"
-              >
-                Manage Storage
-              </Link>
-            </div>
+        <motion.div
+          variants={itemVariants}
+          initial="hidden"
+          animate="visible"
+          className="card bg-gradient-to-br from-slate-900 to-slate-800 text-white"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold">Quick Actions</h3>
           </div>
-
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-6 border border-gray-700">
-            <h3 className="text-xl font-bold text-white mb-4">Recent Activity</h3>
-            <div className="space-y-3">
-              <ActivityItem icon="✅" text="Order #1234 Completed" time="2 hours ago" />
-              <ActivityItem icon="📦" text="Product: Tomatoes added" time="5 hours ago" />
-              <ActivityItem icon="❄️" text="Storage Unit A refilled" time="1 day ago" />
-            </div>
+          <div className="grid grid-cols-2 gap-4">
+            <button className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-left group">
+              <Package className="w-6 h-6 mb-3 text-emerald-400 group-hover:scale-110 transition-transform" />
+              <p className="font-medium">Add Product</p>
+              <p className="text-xs text-slate-400 mt-1">Update inventory</p>
+            </button>
+            <button className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-left group">
+              <ShoppingBag className="w-6 h-6 mb-3 text-blue-400 group-hover:scale-110 transition-transform" />
+              <p className="font-medium">Create Order</p>
+              <p className="text-xs text-slate-400 mt-1">New transaction</p>
+            </button>
           </div>
-        </div>
-
-        {/* Recent Orders */}
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-6 border border-gray-700">
-          <h3 className="text-xl font-bold text-white mb-4">Recent Orders</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-600">
-                  <th className="text-left text-gray-300 font-semibold pb-3">Order ID</th>
-                  <th className="text-left text-gray-300 font-semibold pb-3">Product</th>
-                  <th className="text-left text-gray-300 font-semibold pb-3">Quantity</th>
-                  <th className="text-left text-gray-300 font-semibold pb-3">Status</th>
-                  <th className="text-left text-gray-300 font-semibold pb-3">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                <OrderRow id="ORD001" product="Tomatoes" qty="500 kg" status="Completed" date="Nov 15" />
-                <OrderRow id="ORD002" product="Carrots" qty="300 kg" status="In Transit" date="Nov 16" />
-                <OrderRow id="ORD003" product="Potatoes" qty="1000 kg" status="Pending" date="Nov 17" />
-              </tbody>
-            </table>
-          </div>
-        </div>
+        </motion.div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-function StatCard({ icon, title, value, unit, color }) {
-  return (
-    <div className={`bg-gradient-to-br ${color} rounded-lg p-6 text-white shadow-lg border border-gray-700`}>
-      <div className="text-4xl mb-2">{icon}</div>
-      <h3 className="text-gray-200 text-sm font-medium mb-2">{title}</h3>
-      <div className="text-3xl font-bold mb-1">{value}</div>
-      <p className="text-gray-300 text-xs">{unit}</p>
-    </div>
-  )
-}
-
-function ActivityItem({ icon, text, time }) {
-  return (
-    <div className="flex items-start space-x-3">
-      <span className="text-xl">{icon}</span>
-      <div className="flex-1">
-        <p className="text-white font-semibold">{text}</p>
-        <p className="text-gray-400 text-xs">{time}</p>
+const DashboardCard = ({ title, value, icon, trend, trendUp, color, variants }) => (
+  <motion.div
+    variants={variants}
+    className="card group hover:shadow-lg transition-all duration-300"
+  >
+    <div className="flex items-start justify-between mb-4">
+      <div>
+        <p className="text-slate-500 text-sm font-medium mb-1">{title}</p>
+        <h3 className="text-2xl font-bold text-slate-900">{value}</h3>
+      </div>
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${color} group-hover:scale-110 transition-transform duration-300`}>
+        {icon}
       </div>
     </div>
-  )
-}
+    <div className="flex items-center gap-2">
+      <span className={`flex items-center text-xs font-bold px-2 py-1 rounded-full ${trendUp ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+        {trendUp ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
+        {trend}
+      </span>
+      <span className="text-slate-400 text-xs">vs last month</span>
+    </div>
+  </motion.div>
+);
 
-function OrderRow({ id, product, qty, status, date }) {
-  const statusColor = {
-    'Completed': 'bg-green-900 text-green-200',
-    'In Transit': 'bg-blue-900 text-blue-200',
-    'Pending': 'bg-yellow-900 text-yellow-200'
-  }
-  
-  return (
-    <tr className="border-b border-gray-700 hover:bg-gray-700 transition">
-      <td className="py-3 text-white">{id}</td>
-      <td className="py-3 text-white">{product}</td>
-      <td className="py-3 text-gray-300">{qty}</td>
-      <td className="py-3">
-        <span className={`px-3 py-1 rounded-full text-xs font-bold ${statusColor[status]}`}>
-          {status}
-        </span>
-      </td>
-      <td className="py-3 text-gray-300">{date}</td>
-    </tr>
-  )
-}
+export default DashboardPage;

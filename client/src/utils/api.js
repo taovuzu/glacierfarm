@@ -1,32 +1,30 @@
-/**
- * API Helper Functions
- */
-
 export async function apiCall(endpoint, options = {}) {
-  const baseURL = process.env.VITE_API_URL || '/.netlify/functions/api'
+  const baseURL = import.meta.env.VITE_API_URL
   const url = `${baseURL}${endpoint}`
-  
+  console.log(url);
+
   const token = localStorage.getItem('token')
-  
+
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers
   }
-  
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
   }
-  
+
   try {
     const response = await fetch(url, {
       ...options,
       headers
     })
-    
+
     if (!response.ok) {
-      throw new Error(`API error: ${response.status}`)
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `API error: ${response.status}`);
     }
-    
+
     return await response.json()
   } catch (error) {
     console.error('API call failed:', error)

@@ -1,8 +1,3 @@
-/**
- * Netlify Function: Health Check
- * Simple endpoint to verify that Netlify Functions are working
- */
-
 export const handler = async (event, context) => {
   try {
     return {

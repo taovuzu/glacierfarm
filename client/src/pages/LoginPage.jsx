@@ -1,229 +1,198 @@
-import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { motion } from 'framer-motion';
+import { Mail, Lock, ArrowRight, Snowflake, AlertCircle } from 'lucide-react';
 
-export default function LoginPage() {
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  })
-  const [errors, setErrors] = useState({})
-  const [loading, setLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-
-  const redirectPage = searchParams.get('page') || 'Your Account'
-  const redirectPath = searchParams.get('redirect') || '/dashboard'
-
-  const validateForm = () => {
-    const newErrors = {}
-    
-    if (!formData.email) {
-      newErrors.email = 'Email is required'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email format'
-    }
-    
-    if (!formData.password) {
-      newErrors.password = 'Password is required'
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters'
-    }
-    
-    return newErrors
-  }
-
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }))
-    }
-  }
+const LoginPage = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    
-    const newErrors = validateForm()
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      return
-    }
-
-    setLoading(true)
+    e.preventDefault();
+    setError('');
+    setLoading(true);
     try {
-      const response = await fetch(process.env.VITE_API_URL + '/users/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData)
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        localStorage.setItem('user', JSON.stringify(data.user))
-        localStorage.setItem('token', data.token)
-        navigate(redirectPath)
-      } else {
-        setErrors({ submit: 'Invalid email or password' })
-      }
-    } catch (error) {
-      console.error('Login error:', error)
-      setErrors({ submit: 'Failed to login. Using demo mode.' })
-      // Demo mode - allow login with any credentials
-      localStorage.setItem('user', JSON.stringify({
-        id: 'demo-user',
-        email: formData.email,
-        farmName: 'Demo Farm'
-      }))
-      localStorage.setItem('token', 'demo-token')
-      navigate(redirectPath)
+      await login(email, password);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message || 'Failed to sign in');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-block w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
-            <span className="text-4xl">❄️</span>
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.2, 1],
+            rotate: [0, 5, -5, 0],
+          }}
+          transition={{ duration: 20, repeat: Infinity, repeatType: "reverse" }}
+          className="absolute -top-1/2 -right-1/2 w-[1000px] h-[1000px] bg-sky-100/50 rounded-full blur-3xl"
+        />
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.1, 1],
+            x: [0, -50, 0],
+          }}
+          transition={{ duration: 15, repeat: Infinity, repeatType: "reverse" }}
+          className="absolute -bottom-1/2 -left-1/2 w-[800px] h-[800px] bg-blue-100/50 rounded-full blur-3xl"
+        />
+      </div>
+
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="sm:mx-auto sm:w-full sm:max-w-md relative z-10"
+      >
+        <Link to="/" className="flex justify-center items-center gap-2 mb-6 group">
+          <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-sky-500/20 group-hover:scale-110 transition-transform duration-200">
+            <Snowflake className="text-white w-7 h-7" />
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2">GlacierFarm</h1>
-          <p className="text-gray-400">Farm Cold Storage Solutions</p>
-        </div>
+        </Link>
+        <h2 className="text-center text-3xl font-extrabold text-slate-900">
+          Welcome back
+        </h2>
+        <p className="mt-2 text-center text-sm text-slate-600">
+          Sign in to access your farm dashboard
+        </p>
+      </motion.div>
 
-        {/* Access Required Alert */}
-        {redirectPage && redirectPage !== 'Your Account' && (
-          <div className="mb-6 p-4 bg-blue-900 border border-blue-600 rounded-lg">
-            <p className="text-blue-200 text-sm">
-              <strong className="block mb-1">📋 Access Required</strong>
-              You need to login to view <strong>{redirectPage}</strong> and manage your farm data.
-            </p>
-          </div>
-        )}
-
-        {/* Login Form */}
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-8 shadow-2xl border border-gray-700">
-          <h2 className="text-2xl font-bold text-white mb-2">Farmer Login</h2>
-          <p className="text-gray-400 text-sm mb-6">Login to access your farm data and dashboard</p>
-
-          {errors.submit && (
-            <div className="mb-4 p-3 bg-yellow-900 border border-yellow-600 rounded text-yellow-200 text-sm">
-              {errors.submit}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email Field */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10"
+      >
+        <div className="bg-white py-8 px-4 shadow-xl shadow-slate-200/50 sm:rounded-2xl sm:px-10 border border-slate-100">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            {error && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm flex items-center gap-2"
+              >
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                {error}
+              </motion.div>
+            )}
+            
             <div>
-              <label className="block text-gray-300 font-medium mb-2">Email Address</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="you@farm.com"
-                className={`w-full px-4 py-2 bg-gray-700 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition ${
-                  errors.email 
-                    ? 'border-red-500 focus:ring-red-500' 
-                    : 'border-gray-600 focus:ring-blue-500'
-                }`}
-              />
-              {errors.email && <p className="text-red-400 text-sm mt-1">{errors.email}</p>}
-            </div>
-
-            {/* Password Field */}
-            <div>
-              <label className="block text-gray-300 font-medium mb-2">Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  className={`w-full px-4 py-2 bg-gray-700 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition ${
-                    errors.password 
-                      ? 'border-red-500 focus:ring-red-500' 
-                      : 'border-gray-600 focus:ring-blue-500'
-                  }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-300"
-                >
-                  {showPassword ? '🙈' : '👁️'}
-                </button>
-              </div>
-              {errors.password && <p className="text-red-400 text-sm mt-1">{errors.password}</p>}
-            </div>
-
-            {/* Remember Me */}
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="remember"
-                className="w-4 h-4 rounded cursor-pointer"
-              />
-              <label htmlFor="remember" className="ml-2 text-gray-300 cursor-pointer">
-                Remember me
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+                Email address
               </label>
+              <div className="mt-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-slate-400" />
+                </div>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm transition-all"
+                  placeholder="you@example.com"
+                />
+              </div>
             </div>
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2 px-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold rounded-lg transition duration-200 disabled:opacity-50"
-            >
-              {loading ? 'Logging in...' : 'Login to Access Your Data'}
-            </button>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+                Password
+              </label>
+              <div className="mt-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-slate-400" />
+                </div>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm transition-all"
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-slate-300 rounded"
+                />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-900">
+                  Remember me
+                </label>
+              </div>
+
+              <div className="text-sm">
+                <a href="#" className="font-medium text-sky-600 hover:text-sky-500">
+                  Forgot your password?
+                </a>
+              </div>
+            </div>
+
+            <div>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit"
+                disabled={loading}
+                className={`w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-sky-500 hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-all shadow-lg shadow-sky-500/25 ${
+                  loading ? 'opacity-75 cursor-not-allowed' : ''
+                }`}
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <span className="flex items-center gap-2">Sign in <ArrowRight className="w-4 h-4" /></span>
+                )}
+              </motion.button>
+            </div>
           </form>
 
-          {/* Divider */}
-          <div className="my-6 relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-600"></div>
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-slate-500">
+                  New to GlacierFarm?
+                </span>
+              </div>
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-900 text-gray-400">New farmer?</span>
+
+            <div className="mt-6">
+              <Link
+                to="/signup"
+                className="w-full flex justify-center py-3 px-4 border border-slate-200 rounded-xl shadow-sm bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                Create an account
+              </Link>
             </div>
           </div>
-
-          {/* Sign Up Link */}
-          <Link
-            to="/signup"
-            className="block w-full py-2 px-4 border border-gray-600 hover:border-blue-500 text-gray-300 hover:text-white font-bold rounded-lg transition text-center"
-          >
-            Create Account
-          </Link>
         </div>
-
-        {/* Demo Login Info */}
-        <div className="mt-6 p-4 bg-blue-900 bg-opacity-30 border border-blue-500 rounded-lg">
-          <p className="text-sm text-blue-300">
-            <strong>Demo:</strong> Use any email and password (min 6 chars) to test
-          </p>
-        </div>
-
-        {/* Footer Links */}
-        <div className="text-center mt-6">
-          <Link to="/" className="text-gray-400 hover:text-white text-sm transition">
-            Back to Home
-          </Link>
-        </div>
-      </div>
+      </motion.div>
     </div>
-  )
-}
+  );
+};
+
+export default LoginPage;

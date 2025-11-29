@@ -1,4 +1,6 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from 'react'
+import { apiCall } from '../utils/api'
 
 const AuthContext = createContext(null)
 
@@ -8,22 +10,47 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     // Check if user is logged in
-    const userData = localStorage.getItem('user')
-    if (userData) {
-      try {
-        setUser(JSON.parse(userData))
-      } catch (error) {
-        console.error('Failed to parse user data:', error)
-        localStorage.removeItem('user')
+    const checkAuth = async () => {
+      const token = localStorage.getItem('token')
+      const userData = localStorage.getItem('user')
+      
+      if (token && userData) {
+        try {
+          setUser(JSON.parse(userData))
+        } catch (error) {
+          console.error('Failed to parse user data:', error)
+          localStorage.removeItem('user')
+          localStorage.removeItem('token')
+        }
       }
+      setLoading(false)
     }
-    setLoading(false)
+    
+    checkAuth()
   }, [])
 
-  const login = (userData, token) => {
-    localStorage.setItem('user', JSON.stringify(userData))
-    localStorage.setItem('token', token)
-    setUser(userData)
+  const login = async (email, password) => {
+    const data = await apiCall('/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    })
+    
+    localStorage.setItem('user', JSON.stringify(data.user))
+    localStorage.setItem('token', data.token)
+    setUser(data.user)
+    return data.user
+  }
+
+  const signup = async (formData) => {
+    const data = await apiCall('/signup', {
+      method: 'POST',
+      body: JSON.stringify(formData)
+    })
+    
+    localStorage.setItem('user', JSON.stringify(data.user))
+    localStorage.setItem('token', data.token)
+    setUser(data.user)
+    return data.user
   }
 
   const logout = () => {
@@ -33,7 +60,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   )

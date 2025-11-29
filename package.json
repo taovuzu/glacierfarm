@@ -4,14 +4,18 @@
   "description": "Portable Cold Storage Solutions for Farmers",
   "private": true,
   "scripts": {
-    "install-all": "npm install && cd client && npm install && cd ../netlify/functions && npm install",
     "dev": "npm --prefix client run dev",
     "build": "npm --prefix client run build && npm --prefix netlify/functions install",
-    "start": "npm --prefix client run preview",
-    "lint": "npm --prefix client run lint",
-    "test": "npm --prefix client run test"
+    "start": "npm --prefix client run preview"
   },
-  "keywords": ["cold storage", "farming", "agriculture"],
+  "keywords": [
+    "cold storage",
+    "farming",
+    "agriculture"
+  ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "mongoose": "^8.20.0"
+  }
 }

@@ -22,6 +22,14 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Strip the function path if present (fix for Netlify 404s)
+app.use((req, res, next) => {
+  if (req.url.startsWith('/.netlify/functions/api')) {
+    req.url = req.url.substring('/.netlify/functions/api'.length);
+  }
+  next();
+});
+
 // Database Connection
 let isConnected = false;
 

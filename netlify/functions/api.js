@@ -24,8 +24,11 @@ app.use(express.json());
 
 // Strip the function path if present (fix for Netlify 404s)
 app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] Incoming request: ${req.method} ${req.url}`);
   if (req.url.startsWith('/.netlify/functions/api')) {
+    console.log('Stripping function path prefix');
     req.url = req.url.substring('/.netlify/functions/api'.length);
+    console.log(`New URL: ${req.url}`);
   }
   next();
 });
@@ -34,6 +37,8 @@ app.use((req, res, next) => {
 let isConnected = false;
 
 const connectToDatabase = async () => {
+  console.log('Attempting to connect to database...');
+  console.log('MONGO_URI present:', !!process.env.MONGO_URI);
   if (isConnected) {
     console.log('Using existing database connection');
     return;
@@ -42,7 +47,7 @@ const connectToDatabase = async () => {
   try {
     const db = await mongoose.connect(process.env.MONGO_URI);
     isConnected = db.connections[0].readyState;
-    console.log('Connected to MongoDB');
+    console.log('Connected to MongoDB successfully');
   } catch (error) {
     console.error('Error connecting to MongoDB:', error);
     throw new Error('Database connection failed');
@@ -94,8 +99,10 @@ app.use(async (req, res, next) => {
 
 // Login endpoint
 app.post('/login', async (req, res) => {
+  console.log('Login request received');
   try {
     const { email, password } = req.body;
+    console.log('Login params:', { email, passwordProvided: !!password });
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password required' });
@@ -133,6 +140,7 @@ app.post('/login', async (req, res) => {
 
 // Signup endpoint
 app.post('/signup', async (req, res) => {
+  console.log('Signup request received');
   try {
     console.log('Signup request body:', req.body);
     const { farmName, email, location, phone, password, confirmPassword } = req.body;
@@ -283,8 +291,10 @@ app.post('/change-password', authenticateToken, async (req, res) => {
 
 // Get all products for user
 app.get('/products', authenticateToken, async (req, res) => {
+  console.log('Get products request for user:', req.userId);
   try {
     const userProducts = await Product.find({ userId: req.userId });
+    console.log(`Found ${userProducts.length} products`);
     return res.json({ products: userProducts });
   } catch (err) {
     console.error('Get products error:', err);
@@ -350,6 +360,7 @@ app.put('/products/:id', authenticateToken, async (req, res) => {
 
 // Get all products (marketplace)
 app.get('/marketplace', authenticateToken, async (req, res) => {
+  console.log('Get marketplace request');
   try {
     // Return all products except the user's own products, must be in stock and listed
     const products = await Product.find({

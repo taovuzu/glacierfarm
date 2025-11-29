@@ -146,8 +146,8 @@ app.post('/login', async (req, res) => {
 app.post('/signup', async (req, res) => {
   console.log('Signup request received');
   try {
-    console.log('Signup request body:', req.body);
     const { farmName, email, location, phone, password, confirmPassword } = req.body;
+    console.log('Signup request details:', { farmName, email, location, phone });
 
     // Validation
     if (!farmName || !email || !location || !phone || !password) {

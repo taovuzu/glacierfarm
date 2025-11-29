@@ -2,7 +2,6 @@ export async function apiCall(endpoint, options = {}) {
   const baseURL = import.meta.env.VITE_API_URL || '/netlify/functions/api'
   const url = `${baseURL}${endpoint}`
   console.log(`API Call: ${options.method || 'GET'} ${url}`);
-  if (options.body) console.log('Request Body:', options.body);
 
   const token = localStorage.getItem('token')
 

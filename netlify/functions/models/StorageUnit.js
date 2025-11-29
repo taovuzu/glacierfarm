@@ -10,4 +10,5 @@ const storageUnitSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-export default mongoose.model('StorageUnit', storageUnitSchema);
+const StorageUnit = mongoose.models.StorageUnit || mongoose.model('StorageUnit', storageUnitSchema);
+export default StorageUnit;

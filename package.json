@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "npm --prefix client run dev",
-    "build": "npm --prefix client install && npm --prefix client run build && npm --prefix netlify/functions install",
+    "build": "npm --prefix client install --include=dev && npm --prefix client run build && npm --prefix netlify/functions install",
     "start": "npm --prefix client run preview"
   },
   "keywords": [

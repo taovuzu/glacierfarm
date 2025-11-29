@@ -1,5 +1,5 @@
 export async function apiCall(endpoint, options = {}) {
-  const baseURL = import.meta.env.VITE_API_URL
+  const baseURL = import.meta.env.VITE_API_URL || '/.netlify/functions/api'
   const url = `${baseURL}${endpoint}`
   console.log(url);
 

@@ -28,11 +28,14 @@
 [context.production.environment]
   FRONTEND_URL = "https://glacierfarm.netlify.app"
   NODE_ENV = "production"
+  VITE_API_URL = "/.netlify/functions/api"
 
 [context.deploy-preview.environment]
   FRONTEND_URL = "https://deploy-preview--glacierfarm.netlify.app"
   NODE_ENV = "staging"
+  VITE_API_URL = "/.netlify/functions/api"
 
 [context.branch-deploy.environment]
   FRONTEND_URL = "http://localhost:3000"
   NODE_ENV = "development"
+  VITE_API_URL = "/.netlify/functions/api"

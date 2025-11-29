@@ -10,5 +10,10 @@ const userSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-const User = mongoose.models.User || mongoose.model('User', userSchema);
+// Ensure model is properly exported in serverless environment
+if (mongoose.models.User) {
+  delete mongoose.models.User;
+}
+
+const User = mongoose.model('User', userSchema);
 export default User;

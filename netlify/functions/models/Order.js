@@ -9,5 +9,9 @@ const orderSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-const Order = mongoose.models.Order || mongoose.model('Order', orderSchema);
+if (mongoose.models.Order) {
+  delete mongoose.models.Order;
+}
+
+const Order = mongoose.model('Order', orderSchema);
 export default Order;

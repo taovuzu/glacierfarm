@@ -10,5 +10,9 @@ const storageUnitSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-const StorageUnit = mongoose.models.StorageUnit || mongoose.model('StorageUnit', storageUnitSchema);
+if (mongoose.models.StorageUnit) {
+  delete mongoose.models.StorageUnit;
+}
+
+const StorageUnit = mongoose.model('StorageUnit', storageUnitSchema);
 export default StorageUnit;

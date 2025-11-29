@@ -14,5 +14,4 @@ if (mongoose.models.StorageUnit) {
   delete mongoose.models.StorageUnit;
 }
 
-const StorageUnit = mongoose.model('StorageUnit', storageUnitSchema);
-export default StorageUnit;
+export const StorageUnit = mongoose.model('StorageUnit', storageUnitSchema);

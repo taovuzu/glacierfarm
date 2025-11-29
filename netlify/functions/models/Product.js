@@ -15,5 +15,4 @@ if (mongoose.models.Product) {
   delete mongoose.models.Product;
 }
 
-const Product = mongoose.model('Product', productSchema);
-export default Product;
+export const Product = mongoose.model('Product', productSchema);

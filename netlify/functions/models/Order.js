@@ -13,5 +13,4 @@ if (mongoose.models.Order) {
   delete mongoose.models.Order;
 }
 
-const Order = mongoose.model('Order', orderSchema);
-export default Order;
+export const Order = mongoose.model('Order', orderSchema);

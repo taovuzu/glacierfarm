@@ -6,12 +6,16 @@ import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
-import User from './models/User.js';
-import Product from './models/Product.js';
-import Order from './models/Order.js';
-import StorageUnit from './models/StorageUnit.js';
+import { User } from './models/User.js';
+import { Product } from './models/Product.js';
+import { Order } from './models/Order.js';
+import { StorageUnit } from './models/StorageUnit.js';
 
 dotenv.config();
+console.log('User Model Import:', User);
+console.log('User Model Type:', typeof User);
+if (User) console.log('User.findOne Type:', typeof User.findOne);
+
 
 const app = express();
 
